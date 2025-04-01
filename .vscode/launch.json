@@ -7,7 +7,7 @@
     {
       "type": "node",
       "request": "launch",
-      "name": "Launch Nest Application",
+      "name": "Launch Express Application",
       "env": {
         "NO_NODE_WARNINGS": "1"
       },
