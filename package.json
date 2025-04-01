@@ -1,0 +1,117 @@
+{
+  "name": "express-ts-clean-movie-api",
+  "version": "1.0.0",
+  "repository": "https://github.com/remidosol/express-ts-clean-movie-api.git",
+  "author": "remidosol <ibrahim.aksut.dev@gmail.com>",
+  "license": "MIT",
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "start:dev": "nodemon --config nodemon.json",
+    "start:prod": "node dist/server.js",
+    "format": "prettier --config .prettierrc --write \"src/**/*.ts\" \"test/**/*.ts\"",
+    "lint": "eslint \"{src,test}/**/*.ts\" --fix --quiet",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:cov": "jest --coverage",
+    "test:unit": "jest --testPathPattern=test/unit",
+    "test:integration": "jest --testPathPattern=test/integration",
+    "test:e2e": "jest --testPathPattern=test/e2e",
+    "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
+    "docker:logs": "docker logs -f --since 5m express_backend",
+    "docker:up:dev": "docker compose -f docker-compose.dev.yml up --build -d",
+    "docker:build:dev": "docker build -f Dockerfile.dev -t express_backend/dev .",
+    "docker:build:prod": "docker build -f Dockerfile.prod -t express_backend/prod .",
+    "docker:run": "docker run -p 3333:3333 express_backend/prod",
+    "prepare": "husky",
+    "commit": "cz"
+  },
+  "dependencies": {
+    "@keyv/redis": "^4.3.2",
+    "class-transformer": "^0.5.1",
+    "class-validator": "^0.14.1",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "express-validation-middleware": "^1.0.2",
+    "helmet": "^8.1.0",
+    "keyv": "^5.3.2",
+    "mongoose": "^8.13.1",
+    "morgan": "^1.10.0",
+    "nodemon": "^3.1.9",
+    "reflect-metadata": "^0.2.2",
+    "response-time": "^2.3.3",
+    "tsyringe": "^4.8.0",
+    "winston": "^3.17.0",
+    "xss": "^1.0.15"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^19.8.0",
+    "@commitlint/config-conventional": "^19.8.0",
+    "@commitlint/format": "^19.8.0",
+    "@stylistic/eslint-plugin-ts": "^4.2.0",
+    "@types/cors": "^2.8.17",
+    "@types/express": "^5.0.1",
+    "@types/jest": "^29.5.14",
+    "@types/morgan": "^1.9.9",
+    "@types/node": "^22.13.14",
+    "@types/response-time": "^2.3.8",
+    "@types/supertest": "^6.0.3",
+    "@typescript-eslint/eslint-plugin": "^8.28.0",
+    "@typescript-eslint/parser": "^8.28.0",
+    "commitizen": "^4.3.1",
+    "conventional-changelog-angular": "^8.0.0",
+    "cz-conventional-changelog": "^3.3.0",
+    "eslint": "^9.23.0",
+    "eslint-config-prettier": "^10.1.1",
+    "eslint-config-standard": "^17.1.0",
+    "eslint-import-resolver-typescript": "^4.2.7",
+    "eslint-plugin-import": "^2.31.0",
+    "eslint-plugin-n": "^17.17.0",
+    "eslint-plugin-prettier": "^5.2.5",
+    "eslint-plugin-promise": "^7.2.1",
+    "eslint-plugin-simple-import-sort": "^12.1.1",
+    "eslint-plugin-unused-imports": "^4.1.4",
+    "husky": "^9.1.7",
+    "jest": "^29.7.0",
+    "lint-staged": "^15.5.0",
+    "prettier": "^3.5.3",
+    "supertest": "^7.1.0",
+    "ts-jest": "^29.3.0",
+    "ts-node": "^10.9.2",
+    "ts-node-dev": "^2.0.0",
+    "tsconfig-paths": "^4.2.0",
+    "typescript": "^5.8.2"
+  },
+  "lint-staged": {
+    "**/*.{js,ts,json}": [
+      "yarn lint",
+      "yarn format"
+    ]
+  },
+  "config": {
+    "commitizen": {
+      "path": "./node_modules/cz-conventional-changelog"
+    }
+  },
+  "jest": {
+    "moduleFileExtensions": [
+      "js",
+      "json",
+      "ts"
+    ],
+    "rootDir": ".",
+    "testRegex": ".*\\.spec\\.ts$",
+    "transform": {
+      "^.+\\.(t|j)s$": "ts-jest"
+    },
+    "collectCoverageFrom": [
+      "src/**/*.ts",
+      "!src/main.ts"
+    ],
+    "coverageDirectory": "./coverage",
+    "testEnvironment": "node",
+    "moduleNameMapper": {
+      "@/(.*)": "<rootDir>/src/$1"
+    }
+  }
+}

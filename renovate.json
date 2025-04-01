@@ -1,0 +1,101 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:base", ":dependencyDashboard", ":semanticCommits"],
+  "labels": ["dependencies"],
+  "commitMessageAction": "update",
+  "commitMessageTopic": "{{depName}}",
+  "commitMessagePrefix": "chore(deps):",
+  "packageRules": [
+    {
+      "matchUpdateTypes": ["minor", "patch"],
+      "matchCurrentVersion": "!/^0/",
+      "automerge": true
+    },
+    {
+      "matchPackagePatterns": [
+        "^express$",
+        "^helmet$",
+        "^morgan$",
+        "^response-time$"
+      ],
+      "groupName": "express core dependencies",
+      "automerge": false
+    },
+    {
+      "matchPackagePatterns": ["^mongoose$", "^keyv$", "^@keyv/redis$"],
+      "groupName": "database and cache dependencies",
+      "automerge": false
+    },
+    {
+      "matchPackagePatterns": ["^winston$"],
+      "groupName": "logging dependencies",
+      "automerge": true
+    },
+    {
+      "matchPackagePatterns": [
+        "^typescript$",
+        "^ts-node",
+        "^tsconfig-paths$",
+        "^reflect-metadata$"
+      ],
+      "groupName": "typescript dependencies",
+      "automerge": false
+    },
+    {
+      "matchDepTypes": ["devDependencies"],
+      "matchPackagePatterns": [
+        "^eslint",
+        "^prettier",
+        "^@stylistic",
+        "^@typescript-eslint",
+        "^lint-staged$"
+      ],
+      "groupName": "linting and formatting",
+      "automerge": true
+    },
+    {
+      "matchDepTypes": ["devDependencies"],
+      "matchPackagePatterns": [
+        "^jest$",
+        "^ts-jest$",
+        "^supertest$",
+        "^@types/jest",
+        "^@types/supertest"
+      ],
+      "groupName": "testing packages",
+      "automerge": true
+    },
+    {
+      "matchDepTypes": ["devDependencies"],
+      "matchPackagePatterns": [
+        "^@commitlint",
+        "^commitizen",
+        "^cz-",
+        "^husky$"
+      ],
+      "groupName": "commit tooling",
+      "automerge": true
+    },
+    {
+      "matchPackagePatterns": ["^@types/"],
+      "groupName": "type definitions",
+      "automerge": true
+    },
+    {
+      "matchPackagePatterns": ["^nodemon$"],
+      "groupName": "development tools",
+      "automerge": true
+    }
+  ],
+  "timezone": "Europe/Istanbul",
+  "schedule": ["after 10pm and before 5am on every weekday", "every weekend"],
+  "prCreation": "not-pending",
+  "rangeStrategy": "auto",
+  "prHourlyLimit": 2,
+  "prConcurrentLimit": 5,
+  "separateMajorMinor": true,
+  "separateMultipleMajor": true,
+  "ignoreDeps": ["node"],
+  "ignorePaths": ["**/node_modules/**"],
+  "rebaseWhen": "auto"
+}

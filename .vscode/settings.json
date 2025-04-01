@@ -1,0 +1,22 @@
+{
+  "conventionalCommits.scopes": [
+    "api",
+    "infrastructure",
+    "application",
+    "domain",
+    "interface",
+    "main",
+    "shared",
+    "persistence",
+    "config",
+    "router",
+    "controller",
+    "docker",
+    "middleware",
+    "use_case",
+    "util",
+    "validator",
+    "test",
+    "deps"
+  ]
+}

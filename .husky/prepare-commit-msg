@@ -1,0 +1,13 @@
+#!/bin/sh
+
+# If this is not from a commitizen command, then run commitizen
+# Check if commit is not from git commit --amend, merge, rebase, etc
+COMMIT_SOURCE=$2
+if [ -z "$COMMIT_SOURCE" ] || [ "$COMMIT_SOURCE" = "message" ]; then
+  # Check if /dev/tty is available before using it
+  if [ -t 0 ] && [ -c /dev/tty ]; then
+    exec < /dev/tty && yarn commit --hook || true
+  else
+    echo "Warning: /dev/tty is not available. Skipping interactive commit message prompt."
+  fi
+fi
