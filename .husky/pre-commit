@@ -1,0 +1,17 @@
+#!/bin/sh
+
+# Run lint-staged
+npx --no-install lint-staged
+
+# Run TypeScript check
+npx tsc -p ./tsconfig.build.json --noEmit
+TS_RESULT=$?
+
+# If either lint-staged or TypeScript check failed, exit with non-zero code
+# This will abort the commit
+if [ $TS_RESULT -ne 0 ]; then
+  echo "❌ Error: Commit aborted due to lint-staged or TypeScript errors"
+  exit 1
+fi
+
+exit 0
