@@ -1,14 +1,11 @@
 import "reflect-metadata";
-import dotenv from "dotenv";
 import { Express } from "express";
 import mongoose from "mongoose";
 import { CONFIG, Config } from "../infrastructure/config";
 import { container } from "../infrastructure/di/container";
 import { LOGGER, Logger } from "../infrastructure/logger/Logger";
-import { setupMiddleware } from "./middleware";
-import { registerRoutes } from "./routes";
-
-dotenv.config();
+import { SwaggerDocs } from "../infrastructure/swagger";
+import { setupMiddlewareAndRoutes } from "./setup";
 
 export async function bootstrap(app: Express): Promise<void> {
   try {
@@ -17,16 +14,18 @@ export async function bootstrap(app: Express): Promise<void> {
     const logger = container.resolve<Logger>(LOGGER);
     logger.setOrganizationAndContext("Bootstrap");
 
-    // Configure middleware
-    setupMiddleware(app);
-    logger.info("Middleware configured successfully");
+    // Set up Swagger Documentation
+    const swaggerDocs = container.resolve<SwaggerDocs>(SwaggerDocs.name);
+    swaggerDocs.setup(app);
+    logger.info("Swagger documentation configured successfully");
 
-    // Register all routes
-    registerRoutes(app);
-    logger.info("Routes registered successfully");
+    // Configure middleware
+    await setupMiddlewareAndRoutes(app);
+    logger.info("Middlewares and routes configured successfully");
 
     // Initialize database connections
     await mongoose.connect(config.getOrThrow("DATABASE_URL"));
+    mongoose.set("debug", config.getOrThrow("DEBUG") === "true");
     logger.info("MongoDB connected successfully");
 
     logger.info("Application bootstrapped successfully");

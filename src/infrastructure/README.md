@@ -13,6 +13,7 @@ The Infrastructure Layer provides concrete implementations of interfaces defined
 - [Repositories](#repositories)
 - [Persistence](#persistence)
 - [Mappers](#mappers)
+- [Swagger](#swagger)
 - [Exception Handling](#exception-handling)
 - [Design Principles](#design-principles)
 
@@ -63,6 +64,16 @@ infrastructure/
 ├── mappers/                # ORM to entity mappers
 │   ├── MongoDirectorMapper.ts # Maps MongoDB documents to Director entities
 │   ├── MongoMovieMapper.ts    # Maps MongoDB documents to Movie entities
+│   └── index.ts            # Export barrel
+│
+├── repositories/           # Repository implementations
+│   ├── MongoDirectorRespository.ts # MongoDB implementation of DirectorRepository
+│   ├── MongoMovieRepository.ts # MongoDB implementation of MovieRepository
+│   └── index.ts            # Export barrel
+│
+├── swagger/                # Swagger documentation
+│   ├── SwaggerDocs.ts      # Swagger UI setup and configuration
+│   ├── SwaggerSchemaGenerator.ts # Schema generation from TypeScript DTOs
 │   └── index.ts            # Export barrel
 │
 └── persistence/            # Database schemas and models
@@ -293,6 +304,82 @@ export class MongoMovieMapper {
   static toDocument(movie: Partial<Movie>): any { /*...*/ }
 }
 ```
+
+## Swagger
+
+The Swagger module provides automatic API documentation generation with OpenAPI specifications.
+
+### Key Components
+
+- **SwaggerDocs**: Main service that configures and sets up Swagger UI
+- **SwaggerSchemaGenerator**: Generates OpenAPI schemas from TypeScript DTOs
+
+### Structure
+
+```
+swagger/
+├── SwaggerDocs.ts          # Swagger UI setup and configuration
+├── SwaggerSchemaGenerator.ts # Schema generation from TypeScript DTOs
+└── index.ts                # Export barrel
+```
+
+### Usage
+
+```typescript
+// In your Express app setup
+@inject(SwaggerDocs) private readonly swaggerDocs: SwaggerDocs
+
+// Initialize Swagger
+this.swaggerDocs.setup(app);
+```
+
+### Implementation Highlights
+
+**SwaggerDocs:**
+
+The SwaggerDocs class configures and initializes the Swagger UI:
+
+```typescript
+// Setting up Swagger with automatic schema generation
+const generatedSchemas = this.schemaGenerator.generateSchemas();
+
+const swaggerOptions = {
+  definition: {
+    openapi: "3.0.0",
+    info: {
+      title: `${appName} Documentation`,
+      version: "1.0.0",
+      // ...
+    },
+    components: {
+      schemas: {
+        ...generatedSchemas,
+        // Additional schemas
+      },
+    },
+  },
+  apis: ["./src/interfaces/http/controllers/*.ts"],
+};
+
+// Mount Swagger UI
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+```
+
+**SwaggerSchemaGenerator:**
+
+The SwaggerSchemaGenerator automatically creates OpenAPI schemas from TypeScript DTOs:
+
+- Uses typescript-json-schema to generate JSON schema definitions
+- Finds all DTO classes in the project
+- Creates type-safe API documentation that stays in sync with your code
+- Supports annotations for examples and descriptions
+
+**Benefits:**
+
+- **Automatic Documentation**: API documentation stays in sync with your code
+- **Type Safety**: Generated from TypeScript types for accuracy
+- **Developer Experience**: Interactive API documentation via Swagger UI
+- **Client Integration**: Generated specs can be used to create API clients
 
 ## Exception Handling
 

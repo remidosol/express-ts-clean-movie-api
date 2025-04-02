@@ -17,10 +17,20 @@ export async function errorHandlerMiddleware(
   if (err instanceof ValidationException) {
     logger.warn(`Validation error: ${req.method} ${req.path}`, { error: err });
 
+    let errorMessage = "Validation error";
+
+    if (err.validationErrors && err.validationErrors.length > 0) {
+      if (err.validationErrors[0].constraints) {
+        errorMessage = Object.values(err.validationErrors[0].constraints)[0];
+      }
+    }
+
+    console.log(err.validationErrors);
+
     res.status(400).json({
-      statusCode: 400,
-      message: "Validation failed",
-      errors: err.validationErrors,
+      statusCode: err.statusCode,
+      message: errorMessage,
+      error: "Bad Request",
     });
     return;
   }

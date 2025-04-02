@@ -37,19 +37,19 @@ export class EnvironmentVariables {
   // Throttler
   @IsString()
   @IsOptional()
-  DEFAULT_THROTTLE_TTL?: string;
+  DEFAULT_RATE_LIMIT_TTL?: string;
 
   @IsString()
   @IsOptional()
-  DEFAULT_THROTTLE_LIMIT?: string;
+  DEFAULT_RATE_LIMIT_LIMIT?: string;
 
   @IsString()
   @IsOptional()
-  POST_PATCH_THROTTLE_TTL?: string;
+  POST_PATCH_RATE_LIMIT_TTL?: string;
 
   @IsString()
   @IsOptional()
-  POST_PATCH_THROTTLE_LIMIT?: string;
+  POST_PATCH_RATE_LIMIT_LIMIT?: string;
 
   // Cache
   @IsString()

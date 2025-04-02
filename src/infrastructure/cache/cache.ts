@@ -12,7 +12,7 @@ export class Cache {
   private readonly ttl: number;
 
   constructor(@inject(CONFIG) private readonly config: Config) {
-    this.ttl = parseInt(this.config.get("CACHE_TTL") || "3600000", 10);
+    this.ttl = parseInt(this.config.get("CACHE_TTL") || "600000", 10); // Default to 10 minutes
     this.cacheStore = this.createCacheStore();
   }
 
@@ -42,7 +42,7 @@ export class Cache {
         // Create Redis store
         return new Keyv({
           store: new KeyvRedis(keyvRedisOptions),
-          namespace: this.config.get("APP_NAME"),
+          namespace: "clean_movie_api",
           ttl: this.ttl,
         });
       }
@@ -55,7 +55,7 @@ export class Cache {
 
     // Fallback to in-memory store
     return new Keyv({
-      namespace: this.config.get("APP_NAME"),
+      namespace: "clean_movie_api",
       ttl: this.ttl,
     });
   }
@@ -79,6 +79,25 @@ export class Cache {
    */
   isUsingRedis(): boolean {
     return this.cacheStore.opts?.store instanceof KeyvRedis;
+  }
+
+  /**
+   * Get the underlying Redis client if available
+   * @returns The Redis client or null if not using Redis
+   */
+  getRedisClient(): any | null {
+    if (!this.isUsingRedis()) {
+      return null;
+    }
+
+    const keyv = this.getStore();
+    const store = keyv.opts?.store as any;
+
+    if (store) {
+      return store._redis || store.client || store.redis || null;
+    }
+
+    return null;
   }
 
   /**

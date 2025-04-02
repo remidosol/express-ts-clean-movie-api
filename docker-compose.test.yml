@@ -1,0 +1,66 @@
+services:
+  mongo:
+    image: mongo:latest
+    container_name: mongo
+    volumes:
+      - test_database:/data/db
+    ports:
+      - 27018:27017
+    networks:
+      - movie_test_network
+    restart: always
+
+  redis:
+    image: redis:7-alpine
+    container_name: redis_server
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_test_data:/data
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    networks:
+      - movie_test_network
+
+  backend_test:
+    container_name: express_test_backend
+    image: express-backend-test:1.0.0
+    build:
+      context: .
+      dockerfile: ./Dockerfile.test
+    env_file:
+      - ./secrets/.env.test
+    environment:
+      HOST: localhost
+      HOST_BASE_URL: "http://localhost:3333"
+      DOCKER_HOST_BASE_URL: "http://express_test_backend:3333"
+      PORT: "3333"
+      NODE_ENV: development
+      DEBUG: "true"
+      APP_NAME: "Clean Movie API"
+      DEFAULT_RATE_LIMIT_TTL: "60000" # 60 sec
+      DEFAULT_RATE_LIMIT_LIMIT: "250"
+      POST_PATCH_RATE_LIMIT_TTL: "30000" # 30 sec
+      POST_PATCH_RATE_LIMIT_LIMIT: "20"
+      RESPONSE_TIME_HEADER_NAME: "x-response-time"
+      REQUEST_ID_HEADER_NAME: "x-request-id"
+    ports:
+      - 3333:3333
+    networks:
+      - movie_test_network
+    depends_on:
+      - mongo
+      - redis
+    volumes:
+      - ./:/app/
+      - backend_test_node_modules:/app/node_modules
+    restart: unless-stopped
+
+networks:
+  movie_test_network:
+    driver: bridge
+
+volumes:
+  test_database:
+  backend_test_node_modules:
+  redis_test_data:

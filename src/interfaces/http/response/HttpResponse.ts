@@ -18,6 +18,7 @@ export class HttpResponse {
     return res.status(400).json({
       statusCode: 400,
       message,
+      error: "Bad Request",
     });
   }
 
@@ -28,6 +29,7 @@ export class HttpResponse {
     return res.status(401).json({
       statusCode: 401,
       message,
+      error: "Unauthorized",
     });
   }
 
@@ -35,6 +37,7 @@ export class HttpResponse {
     return res.status(403).json({
       statusCode: 403,
       message,
+      error: "Forbidden",
     });
   }
 
@@ -42,6 +45,7 @@ export class HttpResponse {
     return res.status(404).json({
       statusCode: 404,
       message,
+      error: "Not Found",
     });
   }
 
@@ -49,6 +53,7 @@ export class HttpResponse {
     return res.status(409).json({
       statusCode: 409,
       message,
+      error: "Conflict",
     });
   }
 
@@ -59,6 +64,7 @@ export class HttpResponse {
     return res.status(500).json({
       statusCode: 500,
       message,
+      error: "Internal Server Error",
     });
   }
 

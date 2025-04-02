@@ -6,15 +6,32 @@ import helmet from "helmet";
 import responseTime from "response-time";
 import { CONFIG, Config } from "../infrastructure/config";
 import { container } from "../infrastructure/di/container";
-import { errorHandlerMiddleware } from "../interfaces/http/middleware";
+import { LOGGER, Logger } from "../infrastructure/logger/Logger";
+import { RateLimiterMiddleware } from "../infrastructure/middleware";
+import {
+  errorHandlerMiddleware,
+  requestIdMiddleware,
+} from "../interfaces/http/middleware";
 import { sanitizeObject } from "../shared/utils";
+import { registerRoutes } from "./routes";
 
-export function setupMiddleware(app: Express): void {
+export async function setupMiddlewareAndRoutes(app: Express): Promise<void> {
   const config = container.resolve<Config>(CONFIG);
+  const logger = container.resolve<Logger>(LOGGER);
+  logger.setOrganizationAndContext("Bootstrap");
+
+  if (config.getOrThrow("NODE_ENV") !== "test") {
+    const rateLimiter = container.resolve<RateLimiterMiddleware>(
+      RateLimiterMiddleware
+    );
+    app.use(rateLimiter.handle());
+    logger.info("Rate limiter middleware applied");
+  }
 
   app.use(express.json({ limit: "15mb" }));
   app.use(helmet());
   app.use(cors());
+  app.use(requestIdMiddleware(config));
 
   // XSS protection
   app.use((req, _res, next) => {
@@ -42,6 +59,10 @@ export function setupMiddleware(app: Express): void {
     },
     { fallbackOnErrors: true }
   );
+
+  // Register all routes
+  await registerRoutes(app);
+  logger.info("Routes registered successfully");
 
   // Class transformer setup
   const transformOptions: ClassTransformOptions = {

@@ -3,7 +3,7 @@ import { Movie } from "../../../domain/entities/Movie";
 import { MovieRepository } from "../../../domain/repositories/MovieRepository";
 import { LOGGER, Logger } from "../../../infrastructure/logger/Logger";
 import { MovieListResponseDto } from "../../../interfaces/dtos/response/movie";
-import { MovieMapper } from "../../services/mappers";
+import { MovieMapper } from "../../../interfaces/mappers";
 
 export interface GetAllMoviesOptions {
   page?: number;

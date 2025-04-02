@@ -12,6 +12,7 @@ export const BadRequestExceptionMessages = {
 export const NotFoundExceptionMessages = {
   MOVIE_NOT_FOUND: "Movie not found!",
   DIRECTOR_NOT_FOUND: "Director not found!",
+  MOVIE_OR_DIRECTOR_NOT_FOUND: "Movie or Director not found!",
 };
 
 export const InternalServerErrorExceptionMessages = {

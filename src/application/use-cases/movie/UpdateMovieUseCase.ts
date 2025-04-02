@@ -3,14 +3,18 @@ import { Movie } from "../../../domain/entities/Movie";
 import { MovieRepository } from "../../../domain/repositories/MovieRepository";
 import { LOGGER, Logger } from "../../../infrastructure/logger/Logger";
 import { UpdateMovieResponseDto } from "../../../interfaces/dtos/response/movie";
-import { MovieMapper } from "../../services/mappers";
+import { MovieMapper } from "../../../interfaces/mappers";
+import { MovieApplicationService } from "../../services";
 
 @injectable()
 @singleton()
 export class UpdateMovieUseCase {
   constructor(
     @inject(LOGGER) private readonly logger: Logger,
-    @inject("MovieRepository") private readonly movieRepository: MovieRepository
+    @inject("MovieRepository")
+    private readonly movieRepository: MovieRepository,
+    @inject(MovieApplicationService.name)
+    private readonly movieApplicationService: MovieApplicationService
   ) {
     this.logger.setOrganizationAndContext(UpdateMovieUseCase.name);
   }
@@ -30,6 +34,18 @@ export class UpdateMovieUseCase {
     this.logger.info("Updating movie", { props: { id, movieData } });
 
     try {
+      if (movieData.director) {
+        const isDirectorExists =
+          await this.movieApplicationService.directorExists(
+            movieData.director.toString()
+          );
+
+        if (!isDirectorExists) {
+          this.logger.debug("Director not found");
+          return null;
+        }
+      }
+
       // Update movie in repository
       const updatedMovie = await this.movieRepository.update(id, movieData);
 
@@ -39,7 +55,9 @@ export class UpdateMovieUseCase {
       }
 
       // Map to DTO before returning
-      return { data: MovieMapper.toMovieDto(updatedMovie) };
+      return MovieMapper.toCreateMovieResponseDto(
+        MovieMapper.toMovieDto(updatedMovie)
+      );
     } catch (error: any) {
       this.logger.error("Failed to update movie", { error, props: { id } });
       throw error;

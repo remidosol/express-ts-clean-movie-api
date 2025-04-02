@@ -1,9 +1,9 @@
+import { HydratedDocument, Model } from "mongoose";
 import { inject, injectable, singleton } from "tsyringe";
 import { Director } from "../../domain/entities";
 import { DirectorRepository } from "../../domain/repositories";
 import { LOGGER, Logger } from "../logger/Logger";
 import { MongoDirectorMapper } from "../mappers";
-import { DirectorModel } from "../persistence/schemas";
 
 /**
  * MongoDirectorRepository is a concrete implementation of the DirectorRepository interface
@@ -12,7 +12,11 @@ import { DirectorModel } from "../persistence/schemas";
 @injectable()
 @singleton()
 export class MongoDirectorRepository implements DirectorRepository {
-  constructor(@inject(LOGGER) private readonly logger: Logger) {
+  constructor(
+    @inject(LOGGER) private readonly logger: Logger,
+    @inject("DirectorModel")
+    private readonly directorModel: Model<HydratedDocument<Director>>
+  ) {
     logger.setOrganizationAndContext(MongoDirectorRepository.name);
   }
 
@@ -23,9 +27,7 @@ export class MongoDirectorRepository implements DirectorRepository {
    */
   async findById(id: string): Promise<Director | null> {
     try {
-      const director = await DirectorModel.findById(id)
-        .populate("director")
-        .exec();
+      const director = await this.directorModel.findById(id).exec();
 
       if (!director) return null;
 
@@ -46,7 +48,7 @@ export class MongoDirectorRepository implements DirectorRepository {
     try {
       const directorDocument = MongoDirectorMapper.toDocument(director);
 
-      const newDirector = new DirectorModel(directorDocument);
+      const newDirector = new this.directorModel(directorDocument);
       const savedDirector = await newDirector.save();
 
       return MongoDirectorMapper.toEntity(savedDirector);
@@ -63,7 +65,7 @@ export class MongoDirectorRepository implements DirectorRepository {
    */
   async delete(id: string): Promise<boolean> {
     try {
-      const result = await DirectorModel.findByIdAndDelete(id);
+      const result = await this.directorModel.findByIdAndDelete(id);
       return result !== null;
     } catch (error: any) {
       this.logger.error("Error in delete:", error);

@@ -1,6 +1,6 @@
 import { plainToInstance } from "class-transformer";
 import { validateSync } from "class-validator";
-import * as dotenv from "dotenv";
+import dotenv from "dotenv";
 import { injectable, singleton } from "tsyringe";
 import { EnvironmentVariables } from "./EnvironmentVariables";
 
@@ -42,6 +42,7 @@ export function validateEnvs(envs: Record<string, unknown>) {
   });
 
   const errors = validateSync(validatedConfig, {
+    whitelist: true,
     skipMissingProperties: true,
     skipUndefinedProperties: true,
   });

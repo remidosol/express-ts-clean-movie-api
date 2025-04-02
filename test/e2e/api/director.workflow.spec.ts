@@ -23,23 +23,25 @@ describe("Director API E2E Tests", () => {
 
     // Connect to test database
     await mongoose.connect(
-      process.env.TEST_DATABASE_URL || "mongodb://localhost:27017/test_db"
+      process.env.DATABASE_URL || "mongodb://localhost:27018/test_db"
     );
   });
 
   afterAll(async () => {
     // Clean up created data if test didn't delete it
     if (createdDirectorId) {
-      await request(expressApp).delete(`/api/directors/${createdDirectorId}`);
+      await request(expressApp).delete(
+        `/api/v1/directors/${createdDirectorId}`
+      );
     }
 
     await mongoose.connection.close();
   });
 
-  describe("POST /api/directors", () => {
+  describe("POST /api/v1/directors", () => {
     it("should create a new director successfully", async () => {
       const response = await request(expressApp)
-        .post("/api/directors")
+        .post("/api/v1/directors")
         .send(testDirector)
         .expect(201);
 
@@ -63,17 +65,17 @@ describe("Director API E2E Tests", () => {
       };
 
       await request(expressApp)
-        .post("/api/directors")
+        .post("/api/v1/directors")
         .send(invalidDirector)
         .expect(400);
     });
   });
 
-  describe("DELETE /api/directors/:id", () => {
+  describe("DELETE /api/v1/directors/:id", () => {
     it("should delete a director successfully", async () => {
       // First create a new director to delete
       const createResponse = await request(expressApp)
-        .post("/api/directors")
+        .post("/api/v1/directors")
         .send({
           firstName: "Martin",
           secondName: "Scorsese",
@@ -86,42 +88,21 @@ describe("Director API E2E Tests", () => {
 
       // Then delete it
       await request(expressApp)
-        .delete(`/api/directors/${directorId}`)
+        .delete(`/api/v1/directors/${directorId}`)
         .expect(204);
     });
 
     it("should return 404 for deleting non-existent director", async () => {
       const fakeId = "507f1f77bcf86cd799439011"; // Valid MongoDB ObjectID that doesn't exist
-      await request(expressApp).delete(`/api/directors/${fakeId}`).expect(404);
+      await request(expressApp)
+        .delete(`/api/v1/directors/${fakeId}`)
+        .expect(404);
     });
 
     it("should return 400 for invalid id format", async () => {
-      await request(expressApp).delete("/api/directors/invalid-id").expect(400);
-    });
-  });
-
-  describe("Complete Director Workflow", () => {
-    it("should support the entire director creation and deletion lifecycle", async () => {
-      // 1. Create a new director
-      const createResponse = await request(expressApp)
-        .post("/api/directors")
-        .send({
-          firstName: "Quentin",
-          secondName: "Tarantino",
-          bio: "American film director, screenwriter, producer, and actor.",
-          birthDate: new Date("1963-03-27").toISOString(),
-        })
-        .expect(201);
-
-      const directorId = createResponse.body.data.id;
-      expect(directorId).toBeDefined();
-      expect(createResponse.body.data.firstName).toBe("Quentin");
-      expect(createResponse.body.data.secondName).toBe("Tarantino");
-
-      // 2. Delete the director
       await request(expressApp)
-        .delete(`/api/directors/${directorId}`)
-        .expect(204);
+        .delete("/api/v1/directors/invalid-id")
+        .expect(400);
     });
   });
 
@@ -129,23 +110,38 @@ describe("Director API E2E Tests", () => {
   describe("Director-Movie Relationships", () => {
     let movieId: string;
 
+    beforeAll(async () => {
+      if (!createdDirectorId) {
+        // Create a director if not already created
+        const createResponse = await request(expressApp)
+          .post("/api/v1/directors")
+          .send(testDirector)
+          .expect(201);
+
+        createdDirectorId = createResponse.body.data.id;
+      }
+    });
+
+    afterAll(async () => {
+      if (createdDirectorId) {
+        await request(expressApp).delete(
+          `/api/v1/directors/${createdDirectorId}`
+        );
+      }
+    });
+
     afterEach(async () => {
       // Clean up any movies created during tests
       if (movieId) {
-        await request(expressApp).delete(`/api/movies/${movieId}`);
+        await request(expressApp).delete(`/api/v1/movies/${movieId}`);
         movieId = "";
       }
     });
 
     it("should create a movie with the created director", async () => {
-      // Skip this test if we don't have a director ID from previous tests
-      if (!createdDirectorId) {
-        return;
-      }
-
       // Create a movie with the director
       const createMovieResponse = await request(expressApp)
-        .post("/api/movies")
+        .post("/api/v1/movies")
         .send({
           title: "Director Test Movie",
           description: "A test movie for director relationships",
@@ -174,10 +170,10 @@ describe("Director API E2E Tests", () => {
     });
 
     it("should not create a movie with non-existent director ID", async () => {
-      const nonExistentId = "507f1f77bcf86cd799439011"; // Valid MongoDB ObjectID that doesn't exist
+      const nonExistentId = "67ec2b2db4317979240fb2b7"; // Valid MongoDB ObjectID that doesn't exist
 
-      await request(expressApp)
-        .post("/api/movies")
+      const createMovieResponse = await request(expressApp)
+        .post("/api/v1/movies")
         .send({
           title: "Invalid Director Movie",
           description: "A movie with an invalid director ID",
@@ -187,6 +183,8 @@ describe("Director API E2E Tests", () => {
           director: nonExistentId,
         })
         .expect(400); // Or potentially 404, depending on implementation
+
+      console.log(createMovieResponse.body);
     });
   });
 });

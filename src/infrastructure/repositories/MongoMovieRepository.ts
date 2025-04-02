@@ -1,4 +1,10 @@
-import { FilterQuery, PopulateOptions, Types } from "mongoose";
+import {
+  FilterQuery,
+  HydratedDocument,
+  Model,
+  PopulateOptions,
+  Types,
+} from "mongoose";
 import { inject, injectable, singleton } from "tsyringe";
 import { Movie } from "../../domain/entities";
 import {
@@ -7,7 +13,6 @@ import {
 } from "../../domain/repositories";
 import { LOGGER, Logger } from "../logger/Logger";
 import { MongoMovieMapper } from "../mappers";
-import { MovieModel } from "../persistence/schemas";
 
 /**
  * MongoMovieRepository is a concrete implementation of the MovieRepository interface
@@ -16,7 +21,11 @@ import { MovieModel } from "../persistence/schemas";
 @injectable()
 @singleton()
 export class MongoMovieRepository implements MovieRepository {
-  constructor(@inject(LOGGER) private readonly logger: Logger) {
+  constructor(
+    @inject(LOGGER) private readonly logger: Logger,
+    @inject("MovieModel")
+    private readonly movieModel: Model<HydratedDocument<Movie>>
+  ) {
     logger.setOrganizationAndContext(MongoMovieRepository.name);
   }
 
@@ -27,7 +36,10 @@ export class MongoMovieRepository implements MovieRepository {
    */
   async findById(id: string): Promise<Movie | null> {
     try {
-      const movie = await MovieModel.findById(id).populate("director").exec();
+      const movie = await this.movieModel
+        .findById(id)
+        .populate("director")
+        .exec();
 
       if (!movie) return null;
 
@@ -68,12 +80,14 @@ export class MongoMovieRepository implements MovieRepository {
         }
       }
 
-      const movies = await MovieModel.find(query, projection ?? {}, {
-        skip,
-        limit: pagination?.limit ?? 10,
-        sort: sort ?? { createdAt: -1 },
-        populate: population,
-      }).exec();
+      const movies = await this.movieModel
+        .find(query, projection ?? {}, {
+          skip,
+          limit: pagination?.limit ?? 10,
+          sort: sort ?? { createdAt: -1 },
+          populate: population,
+        })
+        .exec();
       return movies.map((movie) => MongoMovieMapper.toEntity(movie));
     } catch (error: any) {
       this.logger.error("Error in findAll:", error);
@@ -88,7 +102,7 @@ export class MongoMovieRepository implements MovieRepository {
    */
   async getCount(filters?: Partial<Movie>): Promise<number> {
     try {
-      const movieCount = await MovieModel.countDocuments(filters).exec();
+      const movieCount = await this.movieModel.countDocuments(filters).exec();
 
       return movieCount;
     } catch (error: any) {
@@ -104,9 +118,11 @@ export class MongoMovieRepository implements MovieRepository {
    */
   async findByDirector(directorId: string): Promise<Movie[]> {
     try {
-      const movies = await MovieModel.find({
-        director: new Types.ObjectId(directorId),
-      }).populate("director");
+      const movies = await this.movieModel
+        .find({
+          director: new Types.ObjectId(directorId),
+        })
+        .populate("director");
 
       return movies.map((movie) => MongoMovieMapper.toEntity(movie));
     } catch (error: any) {
@@ -125,7 +141,7 @@ export class MongoMovieRepository implements MovieRepository {
     try {
       const movieDocument = MongoMovieMapper.toDocument(movie);
 
-      const newMovie = new MovieModel(movieDocument);
+      const newMovie = new this.movieModel(movieDocument);
       const savedMovie = await newMovie.save();
 
       const populatedMovie = await savedMovie.populate("director");
@@ -157,11 +173,13 @@ export class MongoMovieRepository implements MovieRepository {
         }
       }
 
-      const updatedMovie = await MovieModel.findByIdAndUpdate(
-        id,
-        { $set: updateData },
-        { new: true }
-      ).populate("director");
+      const updatedMovie = await this.movieModel
+        .findByIdAndUpdate(
+          new Types.ObjectId(id),
+          { $set: updateData },
+          { new: true }
+        )
+        .populate("director");
 
       if (!updatedMovie) return null;
 
@@ -179,7 +197,9 @@ export class MongoMovieRepository implements MovieRepository {
    */
   async delete(id: string): Promise<boolean> {
     try {
-      const result = await MovieModel.findByIdAndDelete(id);
+      const result = await this.movieModel.findByIdAndDelete(
+        new Types.ObjectId(id)
+      );
       return result !== null;
     } catch (error: any) {
       this.logger.error("Error in delete:", error);

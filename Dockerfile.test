@@ -1,0 +1,14 @@
+FROM node:22.14-alpine AS development
+
+RUN apk --no-cache add --update alpine-sdk && apk --no-cache add procps python3
+
+WORKDIR /app
+
+COPY package*.json yarn.lock ./
+
+RUN yarn --frozen-lockfile
+
+COPY . .
+
+# Add the test command as specified in docker-compose.test.yml
+CMD ["yarn", "test:e2e"]

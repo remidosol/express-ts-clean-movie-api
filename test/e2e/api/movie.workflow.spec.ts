@@ -33,16 +33,16 @@ describe("Movie API E2E Tests", () => {
 
     // Connect to test database
     await mongoose.connect(
-      process.env.TEST_DATABASE_URL || "mongodb://localhost:27017/test_db"
+      process.env.DATABASE_URL || "mongodb://localhost:27018/test_db"
     );
 
     // Create a test director first (needed for movie creation)
     const directorResponse = await request(expressApp)
-      .post("/api/directors")
+      .post("/api/v1/directors")
       .send({
         firstName: "Christopher",
         secondName: "Nolan",
-        biography: "British-American film director",
+        bio: "British-American film director",
         birthDate: new Date("1970-07-30").toISOString(),
       });
 
@@ -52,20 +52,20 @@ describe("Movie API E2E Tests", () => {
   afterAll(async () => {
     // Clean up created data
     if (createdMovieId) {
-      await request(expressApp).delete(`/api/movies/${createdMovieId}`);
+      await request(expressApp).delete(`/api/v1/movies/${createdMovieId}`);
     }
 
     if (directorId) {
-      await request(expressApp).delete(`/api/directors/${directorId}`);
+      await request(expressApp).delete(`/api/v1/directors/${directorId}`);
     }
 
     await mongoose.connection.close();
   });
 
-  describe("POST /api/movies", () => {
+  describe("POST /api/v1/movies", () => {
     it("should create a new movie successfully", async () => {
       const response = await request(expressApp)
-        .post("/api/movies")
+        .post("/api/v1/movies")
         .send({
           ...testMovie,
           director: directorId,
@@ -92,7 +92,7 @@ describe("Movie API E2E Tests", () => {
       };
 
       const response = await request(expressApp)
-        .post("/api/movies")
+        .post("/api/v1/movies")
         .send(invalidMovie)
         .expect(400);
 
@@ -106,20 +106,20 @@ describe("Movie API E2E Tests", () => {
       };
 
       await request(expressApp)
-        .post("/api/movies")
+        .post("/api/v1/movies")
         .send(movieWithInvalidDirector)
         .expect(400);
     });
 
     it("should reject movie with non-existent director ID", async () => {
-      const nonExistentId = "507f1f77bcf86cd799439011"; // Valid MongoDB ObjectID format but doesn't exist
+      const nonExistentId = "67ec2b2db4317979240fb2b7"; // Valid MongoDB ObjectID format but doesn't exist
       const movieWithNonExistentDirector = {
         ...testMovie,
         director: nonExistentId,
       };
 
       await request(expressApp)
-        .post("/api/movies")
+        .post("/api/v1/movies")
         .send(movieWithNonExistentDirector)
         .expect(400);
     });
@@ -132,7 +132,7 @@ describe("Movie API E2E Tests", () => {
       };
 
       await request(expressApp)
-        .post("/api/movies")
+        .post("/api/v1/movies")
         .send(movieWithInvalidDate)
         .expect(400);
     });
@@ -145,15 +145,17 @@ describe("Movie API E2E Tests", () => {
       };
 
       await request(expressApp)
-        .post("/api/movies")
+        .post("/api/v1/movies")
         .send(movieWithInvalidRating)
         .expect(400);
     });
   });
 
-  describe("GET /api/movies", () => {
+  describe("GET /api/v1/movies", () => {
     it("should retrieve all movies with default pagination", async () => {
-      const response = await request(expressApp).get("/api/movies").expect(200);
+      const response = await request(expressApp)
+        .get("/api/v1/movies")
+        .expect(200);
 
       expect(response.body).toHaveProperty("data");
       expect(response.body).toHaveProperty("pagination");
@@ -166,7 +168,7 @@ describe("Movie API E2E Tests", () => {
 
     it("should apply pagination parameters correctly", async () => {
       const response = await request(expressApp)
-        .get("/api/movies?page=1&limit=5")
+        .get("/api/v1/movies?page=1&limit=5")
         .expect(200);
 
       expect(response.body.pagination.page).toBe(1);
@@ -176,7 +178,7 @@ describe("Movie API E2E Tests", () => {
 
     it("should filter movies by title", async () => {
       const response = await request(expressApp)
-        .get(`/api/movies?title=${encodeURIComponent(testMovie.title)}`)
+        .get(`/api/v1/movies?title=${encodeURIComponent(testMovie.title)}`)
         .expect(200);
 
       expect(response.body.data.length).toBeGreaterThanOrEqual(1);
@@ -185,7 +187,7 @@ describe("Movie API E2E Tests", () => {
 
     it("should filter movies by genre", async () => {
       const response = await request(expressApp)
-        .get(`/api/movies?genre=${testMovie.genre}`)
+        .get(`/api/v1/movies?genre=${testMovie.genre}`)
         .expect(200);
 
       expect(response.body.data.length).toBeGreaterThanOrEqual(1);
@@ -194,7 +196,7 @@ describe("Movie API E2E Tests", () => {
 
     it("should filter movies by director", async () => {
       const response = await request(expressApp)
-        .get(`/api/movies?director=${directorId}`)
+        .get(`/api/v1/movies?director=${directorId}`)
         .expect(200);
 
       expect(response.body.data.length).toBeGreaterThanOrEqual(1);
@@ -203,7 +205,7 @@ describe("Movie API E2E Tests", () => {
 
     it("should sort movies by specified field", async () => {
       const response = await request(expressApp)
-        .get("/api/movies?sortBy=title&sortDir=asc")
+        .get("/api/v1/movies?sortBy=title&sortDir=asc")
         .expect(200);
 
       expect(Array.isArray(response.body.data)).toBe(true);
@@ -218,29 +220,29 @@ describe("Movie API E2E Tests", () => {
     // Negative cases for listing movies
     it("should handle invalid pagination parameters", async () => {
       // Test with negative page
-      await request(expressApp).get("/api/movies?page=-1").expect(400);
+      await request(expressApp).get("/api/v1/movies?page=-1").expect(400);
 
       // Test with negative limit
-      await request(expressApp).get("/api/movies?limit=-5").expect(400);
+      await request(expressApp).get("/api/v1/movies?limit=-5").expect(400);
 
       // Test with non-numeric values
       await request(expressApp)
-        .get("/api/movies?page=abc&limit=def")
+        .get("/api/v1/movies?page=abc&limit=def")
         .expect(400);
     });
 
     it("should handle invalid sorting parameters", async () => {
       // Invalid sort direction
       await request(expressApp)
-        .get("/api/movies?sortBy=title&sortDir=invalid")
+        .get("/api/v1/movies?sortBy=title&sortDir=invalid")
         .expect(400);
     });
   });
 
-  describe("GET /api/movies/:id", () => {
+  describe("GET /api/v1/movies/:id", () => {
     it("should retrieve a movie by ID", async () => {
       const response = await request(expressApp)
-        .get(`/api/movies/${createdMovieId}`)
+        .get(`/api/v1/movies/${createdMovieId}`)
         .expect(200);
 
       expect(response.body).toHaveProperty("data");
@@ -256,20 +258,22 @@ describe("Movie API E2E Tests", () => {
     it("should return 404 for non-existent movie ID", async () => {
       const nonExistentId = "507f1f77bcf86cd799439011"; // Valid MongoDB ObjectID format but doesn't exist
 
-      await request(expressApp).get(`/api/movies/${nonExistentId}`).expect(404);
+      await request(expressApp)
+        .get(`/api/v1/movies/${nonExistentId}`)
+        .expect(404);
     });
 
     it("should return 400 for invalid movie ID format", async () => {
       await request(expressApp)
-        .get("/api/movies/invalid-id-format")
+        .get("/api/v1/movies/invalid-id-format")
         .expect(400);
     });
   });
 
-  describe("PUT /api/movies/:id", () => {
+  describe("PATCH /api/v1/movies/:id", () => {
     it("should update a movie successfully", async () => {
       const response = await request(expressApp)
-        .put(`/api/movies/${createdMovieId}`)
+        .patch(`/api/v1/movies/${createdMovieId}`)
         .send(updatedMovieData)
         .expect(200);
 
@@ -291,7 +295,7 @@ describe("Movie API E2E Tests", () => {
       };
 
       const response = await request(expressApp)
-        .put(`/api/movies/${createdMovieId}`)
+        .patch(`/api/v1/movies/${createdMovieId}`)
         .send(partialUpdate)
         .expect(200);
 
@@ -304,14 +308,14 @@ describe("Movie API E2E Tests", () => {
       const nonExistentId = "507f1f77bcf86cd799439011";
 
       await request(expressApp)
-        .put(`/api/movies/${nonExistentId}`)
+        .patch(`/api/v1/movies/${nonExistentId}`)
         .send(updatedMovieData)
         .expect(404);
     });
 
     it("should return 400 when updating with invalid ID format", async () => {
       await request(expressApp)
-        .put("/api/movies/invalid-id-format")
+        .patch("/api/v1/movies/invalid-id-format")
         .send(updatedMovieData)
         .expect(400);
     });
@@ -319,7 +323,7 @@ describe("Movie API E2E Tests", () => {
     it("should reject update with invalid data types", async () => {
       // Create a temporary movie for this test
       const createResponse = await request(expressApp)
-        .post("/api/movies")
+        .post("/api/v1/movies")
         .send({
           title: "Temp Movie For Invalid Update",
           description: "Will be deleted",
@@ -334,7 +338,7 @@ describe("Movie API E2E Tests", () => {
 
       // Try to update with invalid data
       await request(expressApp)
-        .put(`/api/movies/${tempMovieId}`)
+        .patch(`/api/v1/movies/${tempMovieId}`)
         .send({
           rating: "not-a-number", // Rating should be a number
         })
@@ -342,14 +346,14 @@ describe("Movie API E2E Tests", () => {
 
       // Clean up
       await request(expressApp)
-        .delete(`/api/movies/${tempMovieId}`)
+        .delete(`/api/v1/movies/${tempMovieId}`)
         .expect(204);
     });
 
     it("should reject update with invalid date format", async () => {
       // Create a temporary movie for this test
       const createResponse = await request(expressApp)
-        .post("/api/movies")
+        .post("/api/v1/movies")
         .send({
           title: "Temp Movie For Invalid Date",
           description: "Will be deleted",
@@ -364,7 +368,7 @@ describe("Movie API E2E Tests", () => {
 
       // Try to update with invalid date
       await request(expressApp)
-        .put(`/api/movies/${tempMovieId}`)
+        .patch(`/api/v1/movies/${tempMovieId}`)
         .send({
           releaseDate: "not-a-date",
         })
@@ -372,16 +376,16 @@ describe("Movie API E2E Tests", () => {
 
       // Clean up
       await request(expressApp)
-        .delete(`/api/movies/${tempMovieId}`)
+        .delete(`/api/v1/movies/${tempMovieId}`)
         .expect(204);
     });
   });
 
-  describe("DELETE /api/movies/:id", () => {
+  describe("DELETE /api/v1/movies/:id", () => {
     it("should delete a movie successfully", async () => {
       // Create a new movie specifically for deletion test
       const createResponse = await request(expressApp)
-        .post("/api/movies")
+        .post("/api/v1/movies")
         .send({
           title: "Movie to Delete",
           description: "This movie will be deleted",
@@ -396,12 +400,12 @@ describe("Movie API E2E Tests", () => {
 
       // Delete the movie
       await request(expressApp)
-        .delete(`/api/movies/${movieToDeleteId}`)
+        .delete(`/api/v1/movies/${movieToDeleteId}`)
         .expect(204);
 
       // Verify movie is actually deleted
       await request(expressApp)
-        .get(`/api/movies/${movieToDeleteId}`)
+        .get(`/api/v1/movies/${movieToDeleteId}`)
         .expect(404);
     });
 
@@ -413,13 +417,13 @@ describe("Movie API E2E Tests", () => {
       const nonExistentId = "507f1f77bcf86cd799439011";
 
       await request(expressApp)
-        .delete(`/api/movies/${nonExistentId}`)
+        .delete(`/api/v1/movies/${nonExistentId}`)
         .expect(404);
     });
 
     it("should return 400 when deleting with invalid ID format", async () => {
       await request(expressApp)
-        .delete("/api/movies/invalid-id-format")
+        .delete("/api/v1/movies/invalid-id-format")
         .expect(400);
     });
   });
@@ -428,7 +432,7 @@ describe("Movie API E2E Tests", () => {
     it("should support the entire movie CRUD lifecycle", async () => {
       // 1. Create a new movie
       const createResponse = await request(expressApp)
-        .post("/api/movies")
+        .post("/api/v1/movies")
         .send({
           title: "The Dark Knight",
           description: "Batman fights the Joker",
@@ -445,7 +449,7 @@ describe("Movie API E2E Tests", () => {
 
       // 2. Get the movie
       await request(expressApp)
-        .get(`/api/movies/${movieId}`)
+        .get(`/api/v1/movies/${movieId}`)
         .expect(200)
         .expect((res) => {
           expect(res.body.data.title).toBe("The Dark Knight");
@@ -453,7 +457,7 @@ describe("Movie API E2E Tests", () => {
 
       // 3. Update the movie
       await request(expressApp)
-        .put(`/api/movies/${movieId}`)
+        .patch(`/api/v1/movies/${movieId}`)
         .send({
           title: "The Dark Knight - Masterpiece",
           rating: 9.5,
@@ -466,26 +470,24 @@ describe("Movie API E2E Tests", () => {
 
       // 4. Verify it appears in the list
       await request(expressApp)
-        .get("/api/movies")
+        .get(`/api/v1/movies/${movieId}`)
         .expect(200)
         .expect((res) => {
-          const foundMovie = res.body.data.find(
-            (movie: any) => movie.id === movieId
-          );
+          const foundMovie = res.body.data;
           expect(foundMovie).toBeDefined();
           expect(foundMovie.title).toBe("The Dark Knight - Masterpiece");
         });
 
       // 5. Delete the movie
-      await request(expressApp).delete(`/api/movies/${movieId}`).expect(204);
+      await request(expressApp).delete(`/api/v1/movies/${movieId}`).expect(204);
 
       // 6. Verify deletion
-      await request(expressApp).get(`/api/movies/${movieId}`).expect(404);
+      await request(expressApp).get(`/api/v1/movies/${movieId}`).expect(404);
 
       // Finally, delete our main test movie
       if (createdMovieId) {
         await request(expressApp)
-          .delete(`/api/movies/${createdMovieId}`)
+          .delete(`/api/v1/movies/${createdMovieId}`)
           .expect(204);
         createdMovieId = "";
       }

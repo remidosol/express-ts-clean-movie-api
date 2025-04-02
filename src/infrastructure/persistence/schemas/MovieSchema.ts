@@ -1,4 +1,4 @@
-import { model, Schema, Types } from "mongoose";
+import { Schema, Types } from "mongoose";
 import { commonSchemaOptions } from "../../../shared/utils";
 
 const MovieSchema = new Schema(
@@ -44,6 +44,4 @@ const MovieSchema = new Schema(
   }
 );
 
-const MovieModel = model("Movie", MovieSchema);
-
-export { MovieModel, MovieSchema };
+export { MovieSchema };

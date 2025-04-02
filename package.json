@@ -7,18 +7,20 @@
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
     "start:dev": "nodemon --config nodemon.json",
+    "start:dev:local": "nodemon --config nodemon.local.json",
     "start:prod": "node dist/server.js",
     "format": "prettier --config .prettierrc --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "lint": "eslint \"{src,test}/**/*.ts\" --fix --quiet",
-    "test": "jest",
-    "test:watch": "jest --watch",
-    "test:cov": "jest --coverage",
-    "test:unit": "jest --testPathPattern=test/unit",
-    "test:integration": "jest --testPathPattern=test/integration",
-    "test:e2e": "jest --testPathPattern=test/e2e",
-    "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
+    "test": "node -r dotenv/config node_modules/.bin/jest",
+    "test:watch": "node -r dotenv/config node_modules/.bin/jest --watch",
+    "test:cov": "node -r dotenv/config node_modules/.bin/jest --coverage",
+    "test:unit": "node -r dotenv/config node_modules/.bin/jest --testPathPattern=test/unit dotenv_config_path=./secrets/.env.test",
+    "test:e2e": "node -r dotenv/config node_modules/.bin/jest --testPathPattern=test/e2e dotenv_config_path=./secrets/.env.test",
+    "test:e2e:local": "node -r dotenv/config node_modules/.bin/jest --testPathPattern=test/e2e dotenv_config_path=./secrets/.env.test.local",
+    "test:debug": "node --inspect-brk -r dotenv/config -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "docker:logs": "docker logs -f --since 5m express_backend",
     "docker:up:dev": "docker compose -f docker-compose.dev.yml up --build -d",
+    "docker:up:test": "docker compose -f docker-compose.test.yml up --build -d",
     "docker:build:dev": "docker build -f Dockerfile.dev -t express_backend/dev .",
     "docker:build:prod": "docker build -f Dockerfile.prod -t express_backend/prod .",
     "docker:run": "docker run -p 3333:3333 express_backend/prod",
@@ -27,20 +29,27 @@
   },
   "dependencies": {
     "@keyv/redis": "^4.3.2",
+    "@redis/client": "^1.6.0",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.1",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
+    "express-rate-limit": "^7.5.0",
     "express-validation-middleware": "^1.0.2",
     "helmet": "^8.1.0",
     "keyv": "^5.3.2",
     "mongoose": "^8.13.1",
     "morgan": "^1.10.0",
     "nodemon": "^3.1.9",
+    "rate-limit-redis": "^4.2.0",
     "reflect-metadata": "^0.2.2",
     "response-time": "^2.3.3",
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-express": "^5.0.1",
     "tsyringe": "^4.8.0",
+    "typescript-json-schema": "^0.65.1",
+    "uuid": "^11.1.0",
     "winston": "^3.17.0",
     "xss": "^1.0.15"
   },
@@ -56,6 +65,9 @@
     "@types/node": "^22.13.14",
     "@types/response-time": "^2.3.8",
     "@types/supertest": "^6.0.3",
+    "@types/swagger-jsdoc": "^6.0.4",
+    "@types/swagger-ui-express": "^4.1.8",
+    "@types/uuid": "^10.0.0",
     "@typescript-eslint/eslint-plugin": "^8.28.0",
     "@typescript-eslint/parser": "^8.28.0",
     "commitizen": "^4.3.1",
@@ -91,27 +103,6 @@
   "config": {
     "commitizen": {
       "path": "./node_modules/cz-conventional-changelog"
-    }
-  },
-  "jest": {
-    "moduleFileExtensions": [
-      "js",
-      "json",
-      "ts"
-    ],
-    "rootDir": ".",
-    "testRegex": ".*\\.spec\\.ts$",
-    "transform": {
-      "^.+\\.(t|j)s$": "ts-jest"
-    },
-    "collectCoverageFrom": [
-      "src/**/*.ts",
-      "!src/main.ts"
-    ],
-    "coverageDirectory": "./coverage",
-    "testEnvironment": "node",
-    "moduleNameMapper": {
-      "@/(.*)": "<rootDir>/src/$1"
     }
   }
 }

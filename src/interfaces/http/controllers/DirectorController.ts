@@ -1,6 +1,5 @@
 import { Request, Response } from "express";
 import { inject, injectable, singleton } from "tsyringe";
-import { DirectorMapper } from "../../../application/services/mappers";
 import {
   CreateDirectorUseCase,
   DeleteDirectorUseCase,
@@ -8,6 +7,7 @@ import {
 import { LOGGER, Logger } from "../../../infrastructure/logger/Logger";
 import { NotFoundExceptionMessages } from "../../constants/exception-messages";
 import { CreateDirectorDto } from "../../dtos/request/director";
+import { DirectorMapper } from "../../mappers";
 import { HttpResponse } from "../response";
 
 @injectable()
@@ -24,22 +24,36 @@ export class DirectorController {
   }
 
   /**
-   * Creates a new director in the database
-   *
-   * @param req Express request containing the director data in the body
-   * @param res Express response object
-   * @returns Promise<void>
-   *
-   * @throws Will delegate errors to the HttpResponse handler
-   * @response 201 Returns the created director
-   * @response 400 If validation fails
-   * @response 500 If a server error occurs
+   * @swagger
+   * /api/v1/directors:
+   *   post:
+   *     summary: Create a new director
+   *     description: Creates a new director in the database
+   *     tags:
+   *      - Directors
+   *     requestBody:
+   *       required: true
+   *       content:
+   *         application/json:
+   *           schema:
+   *             $ref: '#/components/schemas/CreateDirectorDto'
+   *     responses:
+   *       201:
+   *         description: Director created successfully
+   *         content:
+   *           application/json:
+   *             schema:
+   *               $ref: '#/components/schemas/CreateDirectorResponseDto'
    */
   async createDirector(req: Request, res: Response): Promise<void> {
     try {
       this.logger.info("Creating director", {
         props: { directorData: req.body },
       });
+
+      console.log(req.query);
+      console.log(req.body);
+      console.log(req.params);
 
       const createDirectorDto = req.body as CreateDirectorDto;
 
@@ -55,16 +69,27 @@ export class DirectorController {
   }
 
   /**
-   * Deletes a director from the database
-   *
-   * @param req Express request containing the director ID in the route parameters
-   * @param res Express response object
-   * @returns Promise<void>
-   *
-   * @throws Will delegate errors to the HttpResponse handler
-   * @response 204 If the director was successfully deleted (no content)
-   * @response 404 If the director is not found
-   * @response 500 If a server error occurs
+   * @swagger
+   * /api/v1/directors/{id}:
+   *   delete:
+   *     summary: Delete a director
+   *     description: Deletes a director from the database
+   *     tags:
+   *      - Directors
+   *     parameters:
+   *       - name: id
+   *         in: path
+   *         required: true
+   *         description: The ID of the director to delete
+   *         schema:
+   *           type: string
+   *     responses:
+   *       204:
+   *         description: Director deleted successfully
+   *       404:
+   *         description: Director not found
+   *       500:
+   *         description: Internal server error
    */
   async deleteDirector(req: Request, res: Response): Promise<void> {
     try {
@@ -75,7 +100,10 @@ export class DirectorController {
       const result = await this.deleteDirectorUseCase.execute(id);
 
       if (!result) {
-        HttpResponse.notFound(res, NotFoundExceptionMessages.MOVIE_NOT_FOUND);
+        HttpResponse.notFound(
+          res,
+          NotFoundExceptionMessages.DIRECTOR_NOT_FOUND
+        );
         return;
       }
 
