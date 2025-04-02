@@ -12,6 +12,7 @@ A RESTful API for managing movies and directors built with Express.js, TypeScrip
   - [Interfaces Layer](#interfaces-layer)
 - [Project Structure](#project-structure)
 - [API Endpoints](#api-endpoints)
+- [API Documentation](#api-documentation)
 - [Development Tools](#development-tools)
 - [Getting Started](#getting-started)
   - [Prerequisites](#prerequisites)
@@ -24,6 +25,7 @@ A RESTful API for managing movies and directors built with Express.js, TypeScrip
 - [Testing](#testing)
 - [Caching](#caching)
 - [Domain Workflows](#domain-workflows)
+- [Integration with Architectural Layers](#integration-with-architectural-layers)
 
 ## Description
 
@@ -85,42 +87,58 @@ The outermost layer that interacts with external systems.
 ## Project Structure
 
 ```
-src/
-├── domain/                # Domain Layer
-│   ├── entities/          # Business entities
-│   └── repositories/      # Repository interfaces
+/
+├── src/                   # Application source code
+│   ├── domain/            # Domain Layer (core business logic)
+│   │   ├── entities/      # Business entities (Director, Movie)
+│   │   └── repositories/  # Repository interfaces
+│   │
+│   ├── application/       # Application Layer
+│   │   ├── services/      # Business services
+│   │   │   └── mappers/   # Entity/DTO mappers
+│   │   └── use-cases/     # Business use cases
+│   │       ├── director/  # Director-related use cases
+│   │       └── movie/     # Movie-related use cases
+│   │
+│   ├── infrastructure/    # Infrastructure Layer
+│   │   ├── cache/         # Caching implementation
+│   │   ├── config/        # Application configuration
+│   │   ├── di/            # Dependency injection container
+│   │   ├── logger/        # Logging infrastructure
+│   │   ├── mappers/       # ORM to entity mappers
+│   │   ├── middleware/    # Infrastructure middleware
+│   │   ├── persistence/   # Database schemas and models
+│   │   ├── repositories/  # Repository implementations
+│   │   └── swagger/       # API documentation
+│   │
+│   ├── interfaces/        # Interfaces Layer
+│   │   ├── constants/     # API constants
+│   │   ├── dtos/          # Data Transfer Objects
+│   │   │   ├── request/   # Request DTOs
+│   │   │   └── response/  # Response DTOs
+│   │   ├── http/          # HTTP-specific components
+│   │   │   ├── controllers/  # API controllers
+│   │   │   ├── middleware/  # HTTP middleware
+│   │   │   ├── response/    # Response handling
+│   │   │   └── routes/      # API routes
+│   │   └── mappers/       # Interface mappers
+│   │
+│   ├── main/              # Application bootstrap
+│   └── shared/            # Shared utilities and helpers
 │
-├── application/           # Application Layer
-│   ├── services/          # Business services
-│   └── use-cases/         # Business use cases
-│       ├── movie/
-│       └── director/
+├── test/                  # Test files
+│   ├── e2e/               # End-to-end tests
+│   └── unit/              # Unit tests
 │
-├── infrastructure/        # Infrastructure Layer
-│   ├── cache/             # Caching implementation
-│   ├── config/            # Application configuration
-│   ├── di/                # Dependency injection setup
-│   ├── logger/            # Logging infrastructure
-│   ├── mappers/           # ORM to entity mappers
-│   ├── persistence/       # Database schemas and connection
-│   └── repositories/      # Repository implementations
-│
-├── interfaces/            # Interfaces Layer
-│   ├── constants/         # API constants
-│   ├── dtos/              # Data Transfer Objects
-│   │   ├── request/       # Request DTOs
-│   │   └── response/      # Response DTOs
-│   └── http/              # HTTP-specific code
-│       ├── controllers/   # API controllers
-│       ├── middlewares/   # HTTP middlewares
-│       ├── response/      # Response handling
-│       ├── routes/        # API routes
-│       └── validation/    # Request validation
-│
-├── main/                  # Application bootstrap
-├── server.ts              # Entry point
-└── shared/                # Shared utilities
-    └── utils/             # Utility functions
+├── docker-compose.dev.yml  # Docker compose for development
+├── docker-compose.test.yml # Docker compose for testing
+├── Dockerfile.dev         # Development Dockerfile
+├── Dockerfile.test        # Testing Dockerfile
+├── server.ts              # Application entry point
+└── secrets/               # Environment configuration files (not in repo)
+    ├── .env               # Development environment variables
+    ├── .env.test          # Test environment variables
+    └── .env.test.local    # Local test environment variables
 ```
 
 ## API Endpoints
@@ -137,6 +155,24 @@ src/
 
 - **POST** `/api/directors` - Create a new director
 - **DELETE** `/api/directors/:id` - Delete a director
+
+## API Documentation
+
+The API is fully documented using Swagger/OpenAPI, providing interactive documentation for developers:
+
+- **Access URL**: `/api-docs` (available in non-production environments)
+- **Features**:
+  - Interactive API explorer
+  - Auto-generated schemas from TypeScript DTOs
+  - Test API calls directly from the browser
+  - Complete request/response documentation
+
+Swagger documentation is automatically generated during application startup by:
+- Converting TypeScript DTOs to JSON schemas
+- Processing controller annotations
+- Integrating custom documentation components
+
+This ensures the API documentation is always up-to-date with the actual implementation, making it easier for frontend developers and API consumers to understand the available endpoints.
 
 ## Development Tools
 
@@ -211,14 +247,19 @@ yarn start:dev
 
 ### Docker Development
 
-The project includes Docker configuration for easy development setup:
+The project includes Docker configuration for easy development and testing setup:
+
+#### Development Environment
 
 ```bash
 # Start the development environment with MongoDB and Redis
-docker-compose -f docker-compose.dev.yml up
+yarn docker:up:dev
+
+# Alternative method
+docker compose -f docker-compose.dev.yml up --build -d
 
 # Run only specific services
-docker-compose -f docker-compose.dev.yml up mongodb redis
+docker compose -f docker-compose.dev.yml up mongodb redis
 ```
 
 This will set up:
@@ -226,6 +267,28 @@ This will set up:
 - MongoDB container (accessible on port 27018)
 - Redis container (accessible on port 6379)
 - Express backend container with hot reloading (accessible on port 3333)
+
+The development environment uses `Dockerfile.dev` which:
+
+- Uses Node.js 22.14 Alpine as the base image
+- Installs necessary development tools and dependencies
+- Sets up the application for development mode with hot reloading
+
+#### Testing Environment
+
+```bash
+# Start the testing environment with MongoDB and Redis
+yarn docker:up:test
+
+# Alternative method
+docker compose -f docker-compose.test.yml up --build -d
+```
+
+The testing environment:
+
+- Uses the same services as development (MongoDB, Redis)
+- Configures the backend service to run tests with `yarn test:e2e`
+- Uses environment variables from `./secrets/.env.test`
 
 ### Production Mode
 
@@ -243,12 +306,21 @@ yarn test
 # Run unit tests
 yarn test:unit
 
-# Run integration tests
-yarn test:integration
+# Run end-to-end tests
+yarn test:e2e
+
+# Run end-to-end tests with local configuration
+yarn test:e2e:local
 
 # Generate coverage report
 yarn test:cov
 ```
+
+End-to-end tests can be run in three ways:
+
+1. Locally via `yarn test:e2e:local` using `.env.test.local` configuration
+2. Using Docker via `yarn docker:up:test` which runs tests automatically
+3. Directly with `yarn test:e2e` using the `.env.test` configuration
 
 ## Caching
 
