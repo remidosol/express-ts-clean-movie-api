@@ -1,4 +1,6 @@
+import { model } from "mongoose";
 import { container, Lifecycle } from "tsyringe";
+import { MovieApplicationService } from "../../../application/services";
 import {
   CreateDirectorUseCase,
   DeleteDirectorUseCase,
@@ -22,10 +24,13 @@ import { CACHE, Cache } from "../../cache";
 import { CONFIG, Config } from "../../config";
 import { LOGGER, Logger } from "../../logger/Logger";
 import { LOGGER_BASE, WinstonLogger } from "../../logger/winston/winstonLogger";
+import { RateLimiterMiddleware } from "../../middleware";
+import { DirectorSchema, MovieSchema } from "../../persistence/schemas";
 import {
   MongoDirectorRepository,
   MongoMovieRepository,
 } from "../../repositories";
+import { SwaggerDocs, SwaggerSchemaGenerator } from "../../swagger";
 
 // Register infrastructure classes with the container
 container.registerSingleton<Config>(CONFIG, Config);
@@ -39,6 +44,12 @@ logger.info("DI Container initialization started");
 container.registerSingleton<Cache>(CACHE, Cache);
 logger.debug("Cache registered");
 
+// Register mongoose models with the container
+container.registerInstance("DirectorModel", model("Director", DirectorSchema));
+logger.debug("DirectorModel registered");
+container.registerInstance("MovieModel", model("Movie", MovieSchema));
+logger.debug("MovieModel registered");
+
 // Register repositories with the container
 container.registerSingleton<MovieRepository>(
   "MovieRepository",
@@ -50,6 +61,12 @@ container.registerSingleton<DirectorRepository>(
   MongoDirectorRepository
 );
 logger.debug("DirectorRepository registered");
+
+// Register application services with the container
+container.registerSingleton<MovieApplicationService>(
+  MovieApplicationService.name,
+  MovieApplicationService
+);
 
 // Register movie use-cases with the container
 container.registerSingleton<CreateMovieUseCase>(
@@ -101,6 +118,17 @@ container.registerSingleton<DirectorController>(
   DirectorController
 );
 logger.debug("DirectorController registered");
+
+// Register Swagger classes with the container
+container.registerSingleton<SwaggerSchemaGenerator>(
+  SwaggerSchemaGenerator.name,
+  SwaggerSchemaGenerator
+);
+container.registerSingleton<SwaggerDocs>(SwaggerDocs.name, SwaggerDocs);
+logger.debug("Swagger classes registered");
+
+container.registerSingleton(RateLimiterMiddleware.name, RateLimiterMiddleware);
+logger.debug("RateLimiterMiddleware registered");
 
 logger.info("DI Container initialized");
 

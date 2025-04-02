@@ -1,9 +1,13 @@
-import { Movie } from "../../../domain/entities";
+import { Movie } from "../../domain/entities";
+import { CreateMovieDto, UpdateMovieDto } from "../dtos/request/movie";
 import {
-  CreateMovieDto,
-  UpdateMovieDto,
-} from "../../../interfaces/dtos/request/movie";
-import { MovieDto } from "../../../interfaces/dtos/response/movie";
+  CreateMovieResponseDto,
+  GetMovieResponseDto,
+  MovieDto,
+  MovieListResponseDto,
+  UpdateMovieResponseDto,
+} from "../dtos/response/movie";
+import { PaginationDto } from "../dtos/response/PaginationDto";
 import { DirectorMapper } from "./DirectorMapper";
 
 export class MovieMapper {
@@ -61,5 +65,45 @@ export class MovieMapper {
     if (dto.director !== undefined) movie.director = dto.director;
 
     return movie;
+  }
+
+  /**
+   * Maps a MovieDto to a create response DTO
+   */
+  static toCreateMovieResponseDto(movieDto: MovieDto): CreateMovieResponseDto {
+    const responseDto = new CreateMovieResponseDto();
+    responseDto.data = movieDto;
+    return responseDto;
+  }
+
+  /**
+   * Maps a MovieDto to an update response DTO
+   */
+  static toUpdateMovieResponseDto(movieDto: MovieDto): UpdateMovieResponseDto {
+    const responseDto = new UpdateMovieResponseDto();
+    responseDto.data = movieDto;
+    return responseDto;
+  }
+
+  /**
+   * Maps a MovieDto to a get response DTO
+   */
+  static toGetMovieResponseDto(movieDto: MovieDto): GetMovieResponseDto {
+    const responseDto = new GetMovieResponseDto();
+    responseDto.data = movieDto;
+    return responseDto;
+  }
+
+  /**
+   * Maps an array of MovieDto and pagination info to a list response DTO
+   */
+  static toMovieListResponseDto(
+    movieDtos: MovieDto[],
+    pagination: PaginationDto
+  ): MovieListResponseDto {
+    const responseDto = new MovieListResponseDto();
+    responseDto.data = movieDtos;
+    responseDto.pagination = pagination;
+    return responseDto;
   }
 }

@@ -1,4 +1,4 @@
-import { model, Schema } from "mongoose";
+import { Schema } from "mongoose";
 import { commonSchemaOptions } from "../../../shared/utils";
 
 const DirectorSchema = new Schema(
@@ -27,6 +27,4 @@ const DirectorSchema = new Schema(
   }
 );
 
-const DirectorModel = model("Director", DirectorSchema);
-
-export { DirectorModel, DirectorSchema };
+export { DirectorSchema };

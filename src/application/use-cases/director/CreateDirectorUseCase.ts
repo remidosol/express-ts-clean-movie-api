@@ -2,8 +2,8 @@ import { inject, injectable, singleton } from "tsyringe";
 import { Director } from "../../../domain/entities/Director";
 import { DirectorRepository } from "../../../domain/repositories/DirectorRepository";
 import { LOGGER, Logger } from "../../../infrastructure/logger/Logger";
-import { DirectorDto } from "../../../interfaces/dtos/response/director";
-import { DirectorMapper } from "../../services/mappers";
+import { CreateDirectorResponseDto } from "../../../interfaces/dtos/response/director";
+import { DirectorMapper } from "../../../interfaces/mappers";
 
 @injectable()
 @singleton()
@@ -25,7 +25,7 @@ export class CreateDirectorUseCase {
    */
   async execute(
     directorData: Omit<Director, "id" | "createdAt" | "updatedAt">
-  ): Promise<DirectorDto> {
+  ): Promise<CreateDirectorResponseDto> {
     this.logger.info("Creating new director", { props: { directorData } });
 
     try {
@@ -34,7 +34,9 @@ export class CreateDirectorUseCase {
         await this.directorRepository.create(directorData);
 
       // Map to DTO before returning
-      return DirectorMapper.toDirectorDto(createdDirector);
+      return DirectorMapper.toCreateDirectorResponseDto(
+        DirectorMapper.toDirectorDto(createdDirector)
+      );
     } catch (error: any) {
       this.logger.error("Failed to create director", { error });
       throw error;

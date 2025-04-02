@@ -1,7 +1,10 @@
 import { Types } from "mongoose";
-import { Director } from "../../../domain/entities";
-import { CreateDirectorDto } from "../../../interfaces/dtos/request/director";
-import { DirectorDto } from "../../../interfaces/dtos/response/director";
+import { Director } from "../../domain/entities";
+import { CreateDirectorDto } from "../dtos/request/director";
+import {
+  CreateDirectorResponseDto,
+  DirectorDto,
+} from "../dtos/response/director";
 
 export class DirectorMapper {
   /**
@@ -38,5 +41,16 @@ export class DirectorMapper {
       bio: dto.bio,
       birthDate: dto.birthDate,
     };
+  }
+
+  /**
+   * Maps a domain entity to a create response DTO
+   */
+  static toCreateDirectorResponseDto(
+    director: DirectorDto
+  ): CreateDirectorResponseDto {
+    const responseDto = new CreateDirectorResponseDto();
+    responseDto.data = director;
+    return responseDto;
   }
 }

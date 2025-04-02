@@ -2,7 +2,7 @@ import { inject, injectable, singleton } from "tsyringe";
 import { MovieRepository } from "../../../domain/repositories/MovieRepository";
 import { LOGGER, Logger } from "../../../infrastructure/logger/Logger";
 import { GetMovieResponseDto } from "../../../interfaces/dtos/response/movie";
-import { MovieMapper } from "../../services/mappers";
+import { MovieMapper } from "../../../interfaces/mappers";
 
 @injectable()
 @singleton()
@@ -33,9 +33,9 @@ export class GetMovieByIdUseCase {
         return null;
       }
 
-      return {
-        data: MovieMapper.toMovieDto(movie),
-      };
+      return MovieMapper.toCreateMovieResponseDto(
+        MovieMapper.toMovieDto(movie)
+      );
     } catch (error: any) {
       this.logger.error("Failed to get movie by id", { error, props: { id } });
       throw error;

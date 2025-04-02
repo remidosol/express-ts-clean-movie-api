@@ -38,10 +38,10 @@ services:
       NODE_ENV: development
       DEBUG: "true"
       APP_NAME: "Clean Movie API"
-      DEFAULT_THROTTLE_TTL: "60000" # 60 sec
-      DEFAULT_THROTTLE_LIMIT: "250"
-      POST_PATCH_THROTTLE_TTL: "30000" # 30 sec
-      POST_PATCH_THROTTLE_LIMIT: "20"
+      DEFAULT_RATE_LIMIT_TTL: "60000" # 60 sec
+      DEFAULT_RATE_LIMIT_LIMIT: "250"
+      POST_PATCH_RATE_LIMIT_TTL: "30000" # 30 sec
+      POST_PATCH_RATE_LIMIT_LIMIT: "20"
       RESPONSE_TIME_HEADER_NAME: "x-response-time"
       REQUEST_ID_HEADER_NAME: "x-request-id"
     command: yarn start:dev
@@ -51,6 +51,7 @@ services:
       - movie_network
     depends_on:
       - mongo
+      - redis
     volumes:
       - ./:/app/
       - backend_node_modules:/app/node_modules

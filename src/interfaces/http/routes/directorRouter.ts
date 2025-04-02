@@ -5,7 +5,9 @@ import {
 } from "../../dtos/request/director";
 import { DirectorController } from "../controllers/DirectorController";
 
-export const directorRouter = (directorController: DirectorController) => {
+export const directorRouter = async (
+  directorController: DirectorController
+) => {
   const { router, post, delete: del } = createRouter();
 
   post("/", {

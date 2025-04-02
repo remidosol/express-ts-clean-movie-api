@@ -2,15 +2,19 @@ import { inject, injectable, singleton } from "tsyringe";
 import { Movie } from "../../../domain/entities/Movie";
 import { MovieRepository } from "../../../domain/repositories/MovieRepository";
 import { LOGGER, Logger } from "../../../infrastructure/logger/Logger";
-import { MovieDto } from "../../../interfaces/dtos/response/movie";
-import { MovieMapper } from "../../services/mappers";
+import { CreateMovieResponseDto } from "../../../interfaces/dtos/response/movie";
+import { MovieMapper } from "../../../interfaces/mappers";
+import { MovieApplicationService } from "../../services";
 
 @injectable()
 @singleton()
 export class CreateMovieUseCase {
   constructor(
     @inject(LOGGER) private readonly logger: Logger,
-    @inject("MovieRepository") private readonly movieRepository: MovieRepository
+    @inject("MovieRepository")
+    private readonly movieRepository: MovieRepository,
+    @inject(MovieApplicationService.name)
+    private readonly movieApplicationService: MovieApplicationService
   ) {
     this.logger.setOrganizationAndContext(CreateMovieUseCase.name);
   }
@@ -24,15 +28,27 @@ export class CreateMovieUseCase {
    */
   async execute(
     movieData: Omit<Movie, "id" | "createdAt" | "updatedAt">
-  ): Promise<MovieDto> {
+  ): Promise<CreateMovieResponseDto | null> {
     this.logger.info("Creating new movie", { props: { movieData } });
 
     try {
+      const isDirectorExists =
+        await this.movieApplicationService.directorExists(
+          movieData.director.toString()
+        );
+
+      if (!isDirectorExists) {
+        this.logger.debug("Director not found");
+        return null;
+      }
+
       // Create the movie in the repository
       const createdMovie = await this.movieRepository.create(movieData);
 
       // Map to DTO before returning
-      return MovieMapper.toMovieDto(createdMovie);
+      return MovieMapper.toCreateMovieResponseDto(
+        MovieMapper.toMovieDto(createdMovie)
+      );
     } catch (error: any) {
       this.logger.error("Failed to create movie", { error });
       throw error;
