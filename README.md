@@ -12,6 +12,7 @@ A RESTful API for managing movies and directors built with Express.js, TypeScrip
   - [Interfaces Layer](#interfaces-layer)
 - [Project Structure](#project-structure)
 - [API Endpoints](#api-endpoints)
+- [API Documentation](#api-documentation)
 - [Development Tools](#development-tools)
 - [Getting Started](#getting-started)
   - [Prerequisites](#prerequisites)
@@ -24,6 +25,7 @@ A RESTful API for managing movies and directors built with Express.js, TypeScrip
 - [Testing](#testing)
 - [Caching](#caching)
 - [Domain Workflows](#domain-workflows)
+- [Integration with Architectural Layers](#integration-with-architectural-layers)
 
 ## Description
 
@@ -153,6 +155,24 @@ The outermost layer that interacts with external systems.
 
 - **POST** `/api/directors` - Create a new director
 - **DELETE** `/api/directors/:id` - Delete a director
+
+## API Documentation
+
+The API is fully documented using Swagger/OpenAPI, providing interactive documentation for developers:
+
+- **Access URL**: `/api-docs` (available in non-production environments)
+- **Features**:
+  - Interactive API explorer
+  - Auto-generated schemas from TypeScript DTOs
+  - Test API calls directly from the browser
+  - Complete request/response documentation
+
+Swagger documentation is automatically generated during application startup by:
+- Converting TypeScript DTOs to JSON schemas
+- Processing controller annotations
+- Integrating custom documentation components
+
+This ensures the API documentation is always up-to-date with the actual implementation, making it easier for frontend developers and API consumers to understand the available endpoints.
 
 ## Development Tools
 

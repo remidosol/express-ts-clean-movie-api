@@ -28,11 +28,9 @@ The application layer serves as the coordination layer that:
 
 ```
 application/
-├── services/           # Utility services
-│   └── mappers/        # Data transformation mappers
-│       ├── DirectorMapper.ts
-│       ├── MovieMapper.ts
-│       └── index.ts    # Export barrel
+├── services/           # Application services
+│   ├── MovieApplicationService.ts  # Movie-related application services
+│   └── index.ts        # Export barrel
 └── use-cases/          # Business use cases
     ├── director/       # Director-related use cases
     │   ├── CreateDirectorUseCase.ts
@@ -111,22 +109,13 @@ Removes a director from the system.
 
 ## Services
 
-Services in the application layer primarily handle data transformation between domain entities and DTOs.
+Services in the application layer provide utility functionality to support use cases.
 
-### MovieMapper
+### MovieApplicationService
 
-Transforms movie entities to DTOs and vice versa:
+Provides movie-related helper methods used across multiple use cases:
 
-- `toMovieDto(movie)`: Converts a Movie entity to a MovieDto
-- `fromCreateDto(dto)`: Maps a CreateMovieDto to Movie entity
-- `fromUpdateDto(dto)`: Maps an UpdateMovieDto to a partial Movie entity
-
-### DirectorMapper
-
-Transforms director entities to DTOs and vice versa:
-
-- `toDirectorDto(director)`: Converts a Director entity to a DirectorDto
-- `fromCreateDto(dto)`: Maps a CreateDirectorDto to Director entity
+- `directorExists(directorId)`: Verifies if a director exists before creating/updating movies
 
 ## Design Principles
 
