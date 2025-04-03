@@ -10,5 +10,4 @@ RUN yarn --frozen-lockfile
 
 COPY . .
 
-# Add the test command as specified in docker-compose.test.yml
-CMD ["yarn", "test:e2e"]
+CMD ["yarn", "test"]
