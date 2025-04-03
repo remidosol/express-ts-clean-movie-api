@@ -12,6 +12,7 @@
     "format": "prettier --config .prettierrc --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "lint": "eslint \"{src,test}/**/*.ts\" --fix --quiet",
     "test": "node -r dotenv/config node_modules/.bin/jest",
+    "test:local": "node -r dotenv/config node_modules/.bin/jest --testPathPattern=test/ dotenv_config_path=./secrets/.env.test.local",
     "test:watch": "node -r dotenv/config node_modules/.bin/jest --watch",
     "test:cov": "node -r dotenv/config node_modules/.bin/jest --coverage",
     "test:unit": "node -r dotenv/config node_modules/.bin/jest --testPathPattern=test/unit dotenv_config_path=./secrets/.env.test",

@@ -35,7 +35,7 @@ services:
       HOST_BASE_URL: "http://localhost:3333"
       DOCKER_HOST_BASE_URL: "http://express_test_backend:3333"
       PORT: "3333"
-      NODE_ENV: development
+      NODE_ENV: test
       DEBUG: "true"
       APP_NAME: "Clean Movie API"
       DEFAULT_RATE_LIMIT_TTL: "60000" # 60 sec
